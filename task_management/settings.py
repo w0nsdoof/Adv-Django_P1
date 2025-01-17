@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
+import os, dotenv
+
+dotenv.load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,10 +24,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-t)%5*q+xf!b+(a#zy=&hxy8kg+1ugxkt=_(-%k5v)5svk#90@&'
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG")
+
+ALLOWED_HOSTS = ["*"]
 
 ALLOWED_HOSTS = []
 
@@ -42,6 +48,7 @@ INSTALLED_APPS = [
     'django_filters',
     
     'core',
+    'authentication',
 ]
 
 MIDDLEWARE = [
@@ -140,12 +147,32 @@ LOGGING = {
         'level': 'INFO', 
     }, 
 } 
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(hours=1),
+}
 
 REST_FRAMEWORK = { 
     'DEFAULT_FILTER_BACKENDS': [ 
         'django_filters.rest_framework.DjangoFilterBackend', 
         'rest_framework.filters.SearchFilter', 
-    ], 
-
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10, 
 } 
+
+# Email
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_PORT = os.getenv("EMAIL_PORT")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = os.getenv("EMAIL_HOST_USER")
+
+# Celery Async
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_RESULT_BACKEND = "redis://redis:6379/1"
